@@ -20,15 +20,26 @@
       3: { units: 3, price: 199.9, perUnit: 66.63, label: "3 unidades", savings: 69.8 },
     },
     offerPopDelay: 12000,
+    orderEndpoint: "", // URL que recibe POST JSON y devuelve {ok:true, orderId:"..."}.
+    orderEndpointTimeout: 15000,
+    analytics: {
+      gtmId: "",
+      ga4Id: "",
+      metaPixelId: "",
+    },
   };
 
   const OFFER_KEY = "pazify_offer_pop_seen";
+  const CONSENT_KEY = "pazify_consent_v1";
+  const isDemo = () => CONFIG.demoMode || !CONFIG.orderEndpoint;
 
   const state = {
     selectedPack: 1,
     orderStarted: false,
+    submitting: false,
     lastOrderText: "",
     lastOrderCode: "",
+    lastOrderDemo: true,
   };
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -46,8 +57,11 @@
     orderForm: $("[data-order-form]"),
     orderStatus: $("[data-order-status]"),
     orderSuccess: $("[data-order-success]"),
+    orderSuccessTitle: $("[data-order-success-title]"),
     orderSuccessMessage: $("[data-order-success-message]"),
     orderCode: $("[data-order-code]"),
+    demoBanner: $("[data-demo-banner]"),
+    demoOrderNote: $("[data-demo-order-note]"),
     orderPackLabel: $("[data-order-pack-label]"),
     orderPackPrice: $("[data-order-pack-price]"),
     orderTotal: $("[data-order-total]"),
@@ -60,6 +74,8 @@
     mobileBar: $("[data-mobile-buy-bar]"),
     buySection: $(".buybox"),
     offerPop: $("[data-offer-pop]"),
+    videoModal: $("#video-modal"),
+    consentBanner: $("[data-consent-banner]"),
   };
 
   let activeDialog = null;
@@ -70,10 +86,40 @@
 
   const money = (value) => `S/ ${(Number(value) || 0).toFixed(2)}`;
 
+  const eventMap = {
+    view_item: "ViewContent",
+    select_item: "SelectPack",
+    begin_checkout: "InitiateCheckout",
+    order_created: "OrderCreated",
+    whatsapp_click: "WhatsAppClick",
+    offer_pop_view: "OfferPopView",
+    faq_open: "FAQOpen",
+    scroll_depth: "ScrollDepth",
+  };
+
   const track = (event, data = {}) => {
+    const payload = { event, ...data };
     window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event, ...data });
-    document.dispatchEvent(new CustomEvent("pazify:track", { detail: { event, ...data } }));
+    window.dataLayer.push(payload);
+
+    if (CONFIG.analytics.ga4Id && !CONFIG.analytics.gtmId && typeof window.gtag === "function") {
+      window.gtag("event", eventMap[event] || event, data);
+    }
+
+    if (CONFIG.analytics.metaPixelId && typeof window.fbq === "function") {
+      const metaMap = {
+        view_item: "ViewContent",
+        select_item: "SelectPack",
+        begin_checkout: "InitiateCheckout",
+        order_created: "Lead",
+        whatsapp_click: "Contact",
+      };
+      const metaEvent = metaMap[event] || event;
+      if (metaEvent === "SelectPack") window.fbq("trackCustom", metaEvent, data);
+      else window.fbq("track", metaEvent, data);
+    }
+
+    document.dispatchEvent(new CustomEvent("pazify:track", { detail: payload }));
     if (new URLSearchParams(window.location.search).has("debug")) {
       console.debug("[pazify]", event, data);
     }
@@ -213,6 +259,40 @@
 
   /* ---------- Pedido contra entrega ---------- */
 
+  const normalizePeruPhone = (value) => String(value || "").replace(/\D/g, "").replace(/^51/, "");
+
+  const validatePeruPhone = (input) => {
+    if (!input) return false;
+    const valid = /^9\d{8}$/.test(normalizePeruPhone(input.value));
+    input.setCustomValidity(valid ? "" : "Ingresa un celular peruano de 9 dígitos que empiece con 9.");
+    return valid;
+  };
+
+  const getOrderCode = (demo = false) => {
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `${demo ? "DEMO" : "PZ"}-${date}-${suffix}`;
+  };
+
+  const deliveryLabel = (value) =>
+    value === "agencia" ? "Recojo en agencia (coordinar)" : "Entrega a domicilio";
+
+  const applyDemoState = () => {
+    const demo = isDemo();
+    document.querySelectorAll("[data-demo-only]").forEach((element) => {
+      element.hidden = !demo;
+    });
+    document.querySelectorAll("[data-production-only]").forEach((element) => {
+      element.hidden = demo;
+    });
+    if (els.demoBanner) els.demoBanner.hidden = !demo;
+    if (els.demoOrderNote) els.demoOrderNote.hidden = !demo;
+    if (els.orderSuccessTitle && !els.orderModal?.classList.contains("is-success")) {
+      els.orderSuccessTitle.textContent = demo ? "Vista previa del pedido" : "Pedido registrado";
+    }
+    document.body.dataset.demo = demo ? "true" : "false";
+  };
+
   const resetOrderModal = () => {
     if (!els.orderModal) return;
     const card = $(".modal-order", els.orderModal);
@@ -224,6 +304,7 @@
       els.orderForm.reset();
     }
     if (els.orderStatus) els.orderStatus.textContent = "";
+    applyDemoState();
   };
 
   const openOrder = () => {
@@ -232,6 +313,7 @@
     if (els.orderSuccess && !els.orderSuccess.hidden) resetOrderModal();
     else if (els.orderSuccess) els.orderSuccess.hidden = true;
     if (els.orderForm) els.orderForm.hidden = false;
+    applyDemoState();
     syncPackUI();
     openDialog(els.orderModal);
     track("begin_checkout", {
@@ -241,15 +323,20 @@
     });
   };
 
-  const buildOrderText = (data) => {
+  const buildOrderText = (data, orderCode, demo = false) => {
     const pack = CONFIG.packs[state.selectedPack];
     const lines = [
-      "Hola Pazify 👋 Quiero confirmar este pedido contra entrega:",
+      demo ? "PEDIDO DE DEMOSTRACIÓN — NO REGISTRADO" : "Hola Pazify 👋 Quiero confirmar este pedido contra entrega:",
       "",
-      `• ${pack.label} — ${money(pack.price)}`,
+      `Código de pedido: ${orderCode}`,
+      `Producto: ${CONFIG.product.name}`,
+      `Pack: ${pack.label}`,
+      `Cantidad: ${pack.units} unidad(es)`,
+      `Precio total: ${money(pack.price)}`,
+      `Modalidad de entrega: ${deliveryLabel(data.delivery)}`,
       "",
-      "Envío: Gratis a todo el Perú",
-      `Total a pagar al recibir: ${money(pack.price)}`,
+      "Envío: Gratis a todo el Perú (sujeto a cobertura)",
+      "Método de pago: contra entrega",
       "",
       `Nombre: ${data.name}`,
       `WhatsApp: ${data.phone}`,
@@ -258,24 +345,32 @@
       `Dirección: ${data.address}`,
     ];
     if (data.reference) lines.push(`Referencia: ${data.reference}`);
-    lines.push("", "Método de pago: contra entrega.");
     return lines.join("\n");
   };
 
-  const showOrderSuccess = (message) => {
+  const showOrderSuccess = ({ title, message, code, demo = false }) => {
     const card = $(".modal-order", els.orderModal);
     if (card) card.classList.add("is-success");
     if (els.orderModal) els.orderModal.setAttribute("aria-labelledby", "order-success-title");
+    if (els.orderSuccessTitle) els.orderSuccessTitle.textContent = title;
     if (els.orderSuccess) els.orderSuccess.hidden = false;
     if (els.orderForm) els.orderForm.hidden = true;
     if (els.orderStatus) els.orderStatus.textContent = "";
     if (els.orderSuccessMessage) els.orderSuccessMessage.textContent = message;
-    if (els.orderCode) els.orderCode.textContent = state.lastOrderCode;
+    if (els.orderCode) els.orderCode.textContent = code;
+    document.body.dataset.lastOrderDemo = demo ? "true" : "false";
   };
 
-  const handleOrderSubmit = (event) => {
+  const handleOrderSubmit = async (event) => {
     event.preventDefault();
-    if (!els.orderForm) return;
+    if (!els.orderForm || state.submitting) return;
+
+    const phoneInput = els.orderForm.querySelector('input[name="phone"]');
+    if (!validatePeruPhone(phoneInput)) {
+      phoneInput.reportValidity();
+      if (els.orderStatus) els.orderStatus.textContent = "Revisa el número de WhatsApp: debe ser un celular peruano de 9 dígitos.";
+      return;
+    }
 
     if (!els.orderForm.checkValidity()) {
       els.orderForm.reportValidity();
@@ -286,49 +381,120 @@
     const formData = new FormData(els.orderForm);
     const data = {
       name: String(formData.get("name") || "").trim(),
-      phone: String(formData.get("phone") || "").trim(),
+      phone: normalizePeruPhone(formData.get("phone")),
       department: String(formData.get("department") || "").trim(),
       city: String(formData.get("city") || "").trim(),
       address: String(formData.get("address") || "").trim(),
       reference: String(formData.get("reference") || "").trim(),
+      delivery: String(formData.get("delivery") || "domicilio"),
     };
 
     const pack = CONFIG.packs[state.selectedPack];
-    state.lastOrderText = buildOrderText(data);
-    state.lastOrderCode = `PZ-${Date.now().toString().slice(-6)}`;
+    const demo = isDemo();
+    const localCode = getOrderCode(demo);
+    const submitButton = els.orderForm.querySelector('button[type="submit"]');
 
-    const isDemo = CONFIG.demoMode || !CONFIG.whatsapp;
+    state.lastOrderCode = localCode;
+    state.lastOrderDemo = demo;
+    state.lastOrderText = buildOrderText(data, localCode, demo);
 
-    if (isDemo) {
-      showOrderSuccess("Modo demostración: tu pedido está listo. Configura tu WhatsApp en script.js para recibir pedidos reales.");
-      track("purchase", {
-        transaction_id: state.lastOrderCode,
+    if (demo) {
+      showOrderSuccess({
+        title: "Vista previa del pedido",
+        message: "Este pedido no se ha registrado. El sitio está en modo demostración; configura un endpoint de pedidos para activar la tienda real.",
+        code: localCode,
+        demo: true,
+      });
+      track("demo_order_preview", {
+        currency: CONFIG.currency,
+        value: pack.price,
+        pack: pack.label,
+        demo: true,
+      });
+      showToast("Vista previa creada. No se ha registrado ningún pedido.");
+      return;
+    }
+
+    state.submitting = true;
+    if (submitButton) submitButton.disabled = true;
+    if (els.orderStatus) els.orderStatus.textContent = "Registrando tu pedido…";
+
+    let timeoutId;
+    try {
+      const controller = new AbortController();
+      timeoutId = window.setTimeout(() => controller.abort(), CONFIG.orderEndpointTimeout);
+      const response = await fetch(CONFIG.orderEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderCode: localCode,
+          name: data.name,
+          phone: data.phone,
+          department: data.department,
+          city: data.city,
+          address: data.address,
+          reference: data.reference,
+          delivery: data.delivery,
+          pack: state.selectedPack,
+          packLabel: pack.label,
+          quantity: pack.units,
+          price: pack.price,
+          currency: CONFIG.currency,
+          consent: true,
+          source: "web",
+          pageUrl: window.location.href,
+          createdAt: new Date().toISOString(),
+        }),
+        signal: controller.signal,
+      });
+      window.clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json().catch(() => ({}));
+      if (result.ok === false) throw new Error(result.error || "Pedido rechazado");
+
+      const serverCode = result.orderId || result.id || localCode;
+      state.lastOrderCode = serverCode;
+      state.lastOrderText = buildOrderText(data, serverCode, false);
+
+      showOrderSuccess({
+        title: "Pedido registrado",
+        message: CONFIG.whatsapp
+          ? "Pedido registrado. Abrimos WhatsApp para confirmar la entrega y coordinar el pago contra entrega."
+          : "Pedido registrado. Nos pondremos en contacto para confirmar la entrega. Pagas al recibir.",
+        code: serverCode,
+        demo: false,
+      });
+
+      track("order_created", {
+        transaction_id: serverCode,
         currency: CONFIG.currency,
         value: pack.price,
         shipping: 0,
+        status: "created",
         items: [{ item_name: `${CONFIG.product.name} — ${pack.label}`, price: pack.price, quantity: 1 }],
-        demo: true,
       });
-      showToast("Pedido de demostración creado. Revisa el resumen.");
-      return;
-    }
 
-    const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
-    const whatsappWindow = window.open(url, "_blank");
-    if (!whatsappWindow) {
-      if (els.orderStatus) els.orderStatus.textContent = "Permite las ventanas emergentes para abrir WhatsApp.";
-      return;
+      if (CONFIG.whatsapp) {
+        const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
+        const whatsappWindow = window.open(url, "_blank");
+        if (whatsappWindow) {
+          whatsappWindow.opener = null;
+          track("whatsapp_click", { location: "order", order_id: serverCode });
+        } else if (els.orderStatus) {
+          els.orderStatus.textContent = "Pedido registrado. Permite las ventanas emergentes para abrir WhatsApp.";
+        }
+      }
+    } catch (error) {
+      if (els.orderStatus) {
+        els.orderStatus.textContent = "No pudimos registrar tu pedido. No se ha confirmado nada. Intenta de nuevo o escríbenos por WhatsApp.";
+      }
+      showToast("No se registró el pedido. Intenta de nuevo.");
+    } finally {
+      window.clearTimeout(timeoutId);
+      state.submitting = false;
+      if (submitButton) submitButton.disabled = false;
     }
-    whatsappWindow.opener = null;
-
-    showOrderSuccess("Abrimos WhatsApp con tu pedido. Envíalo para confirmar la entrega y coordinar el pago contra entrega.");
-    track("purchase", {
-      transaction_id: state.lastOrderCode,
-      currency: CONFIG.currency,
-      value: pack.price,
-      shipping: 0,
-      items: [{ item_name: `${CONFIG.product.name} — ${pack.label}`, price: pack.price, quantity: 1 }],
-    });
   };
 
   /* ---------- Galería ---------- */
@@ -381,6 +547,7 @@
 
   const openOfferPop = () => {
     if (!els.offerPop) return;
+    if (window.matchMedia("(max-width: 767px)").matches) return;
     if (state.orderStarted || activeDialog || document.body.classList.contains("dialog-open")) return;
     if (safeSession.get(OFFER_KEY) === "1") return;
     els.offerPop.classList.add("is-open");
@@ -423,6 +590,85 @@
         event.preventDefault();
         showToast("Muy pronto tendremos novedades en nuestras redes.");
       });
+    });
+  };
+
+
+  const loadAnalytics = () => {
+    const { gtmId, ga4Id, metaPixelId } = CONFIG.analytics;
+    if (!gtmId && !ga4Id && !metaPixelId) return;
+
+    if (gtmId && !window.__pazifyGtmLoaded) {
+      window.__pazifyGtmLoaded = true;
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(gtmId)}`;
+      document.head.appendChild(script);
+    }
+
+    if (ga4Id && !gtmId && !window.__pazifyGa4Loaded) {
+      window.__pazifyGa4Loaded = true;
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ga4Id)}`;
+      document.head.appendChild(script);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+      window.gtag("js", new Date());
+      window.gtag("config", ga4Id);
+    }
+
+    if (metaPixelId && !window.__pazifyMetaLoaded) {
+      window.__pazifyMetaLoaded = true;
+      /* eslint-disable */
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      /* eslint-enable */
+      window.fbq("init", metaPixelId);
+      window.fbq("track", "PageView");
+    }
+  };
+
+  const setupConsent = () => {
+    const hasAnalytics = Object.values(CONFIG.analytics).some(Boolean);
+    if (!hasAnalytics || !els.consentBanner) return;
+
+    let stored = null;
+    try {
+      stored = window.localStorage.getItem(CONSENT_KEY);
+    } catch {
+      stored = null;
+    }
+
+    if (stored === "accepted") {
+      loadAnalytics();
+      return;
+    }
+    if (stored === "rejected") return;
+
+    els.consentBanner.hidden = false;
+    $$("[data-consent]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const choice = button.dataset.consent;
+        try {
+          window.localStorage.setItem(CONSENT_KEY, choice);
+        } catch {
+          /* noop */
+        }
+        els.consentBanner.hidden = true;
+        if (choice === "accept") loadAnalytics();
+      });
+    });
+  };
+
+  const setupVideo = () => {
+    $$("[data-video-open]").forEach((button) => {
+      button.addEventListener("click", () => openDialog(els.videoModal));
     });
   };
 
@@ -561,6 +807,12 @@
       button.addEventListener("click", openLightbox);
     });
 
+    const phoneInput = els.orderForm?.querySelector('input[name="phone"]');
+    if (phoneInput) {
+      phoneInput.addEventListener("input", () => phoneInput.setCustomValidity(""));
+      phoneInput.addEventListener("blur", () => validatePeruPhone(phoneInput));
+    }
+
     const tabs = $$("[data-tab]");
     tabs.forEach((tab, index) => {
       tab.addEventListener("click", () => activateTab(tab.dataset.tab));
@@ -650,8 +902,11 @@
 
   const init = () => {
     syncPackUI();
+    applyDemoState();
     setupExternalLinks();
     bindEvents();
+    setupVideo();
+    setupConsent();
     setupReveal();
     setupScrollDepth();
     setupHeader();
@@ -677,6 +932,7 @@
     selectPack,
     openOrder,
     showToast,
+    applyDemoState,
   };
 
   if (document.readyState === "loading") {

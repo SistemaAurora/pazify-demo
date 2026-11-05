@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Cambia este dominio por el tuyo antes de publicar.
-Sitemap: https://pazify.com/sitemap.xml
+Sitemap: https://sistemaaurora.github.io/pazify-demo/sitemap.xml
