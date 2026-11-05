@@ -4931,3 +4931,726 @@ body.nav-open .menu-icon-close {
     display: none !important;
   }
 }
+
+/* =========================================================
+   IMPULSO VISUAL · marquee, sticky buy, tendencia y escala
+   ========================================================= */
+
+/* ---------- Marquee superior ---------- */
+
+.announcement {
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.announcement-marquee {
+  overflow: hidden;
+}
+
+.announcement-track {
+  display: flex;
+  width: max-content;
+  animation: announcement-marquee 26s linear infinite;
+}
+
+.announcement-track span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
+.announcement-track span::after {
+  content: "•";
+  margin-left: 22px;
+  color: var(--amber);
+}
+
+@keyframes announcement-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ---------- Tendencia y prueba visual ---------- */
+
+.trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #FFE8B3, var(--amber));
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  box-shadow: 0 12px 26px -16px rgba(232, 163, 58, 0.95);
+  animation: trend-glow 2.4s var(--ease) infinite;
+}
+
+.trend-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #E04B2A;
+  animation: trend-dot 1.6s ease-out infinite;
+}
+
+@keyframes trend-glow {
+  0%, 100% { box-shadow: 0 12px 26px -16px rgba(232, 163, 58, 0.95); }
+  50% { box-shadow: 0 16px 34px -12px rgba(232, 163, 58, 1); }
+}
+
+@keyframes trend-dot {
+  0% { box-shadow: 0 0 0 0 rgba(224, 75, 42, 0.55); }
+  70% { box-shadow: 0 0 0 9px rgba(224, 75, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(224, 75, 42, 0); }
+}
+
+.sales-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sales-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 13px;
+  border-radius: var(--radius-pill);
+  background: var(--sage);
+  color: var(--teal-dark);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sales-chip:nth-child(2) {
+  background: #F5E4C5;
+  color: var(--ink);
+}
+
+.sales-chip:nth-child(3) {
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.gallery-trend {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #FFE8B3, var(--amber));
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.4);
+  animation: trend-glow 2.4s var(--ease) infinite;
+}
+
+/* ---------- CTA que se mueve fuerte ---------- */
+
+.btn-cta {
+  animation:
+    cta-pulse 2.8s var(--ease) infinite,
+    cta-shake 2s var(--ease) infinite;
+}
+
+@keyframes cta-shake {
+  0%, 68%, 100% { transform: translate(0, 0) rotate(0); }
+  70% { transform: translate(-3px, 0) rotate(-1.4deg) scale(1.01); }
+  72% { transform: translate(3px, 0) rotate(1.4deg) scale(1.01); }
+  74% { transform: translate(-2px, 0) rotate(-0.9deg); }
+  76% { transform: translate(2px, 0) rotate(0.9deg); }
+  78% { transform: translate(0, 0) rotate(0); }
+}
+
+.btn-add.btn-cta {
+  min-height: 68px;
+  padding-left: 28px;
+  padding-right: 14px;
+  font-size: 16px;
+}
+
+.btn-add.btn-cta .btn-price {
+  font-size: 16px;
+}
+
+/* ---------- Barra de compra siempre visible ---------- */
+
+.sticky-buy-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 78;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(255, 252, 246, 0.97);
+  box-shadow: 0 -18px 44px -26px rgba(18, 60, 63, 0.55);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.sticky-buy-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sticky-buy-info span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sticky-buy-info strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.sticky-buy-info small {
+  color: var(--teal-dark);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.sticky-buy-button {
+  min-height: 58px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.sticky-cta-short {
+  display: none;
+}
+
+body {
+  padding-bottom: 96px;
+}
+
+/* ---------- Escala general más grande ---------- */
+
+.buybox h1 {
+  font-size: clamp(3rem, 4.6vw, 4.5rem);
+}
+
+.buybox-sub {
+  font-size: 16px;
+  line-height: 1.72;
+}
+
+.eyebrow {
+  font-size: 11px;
+}
+
+.price {
+  font-size: clamp(2.6rem, 3.4vw, 3.25rem);
+}
+
+.price-currency {
+  font-size: 12px;
+}
+
+.price-badge {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.price-note {
+  font-size: 12px;
+}
+
+.quick-benefits li {
+  font-size: 12px;
+}
+
+.bundle-info strong {
+  font-size: 15px;
+}
+
+.bundle-info span {
+  font-size: 11px;
+}
+
+.bundle-price {
+  font-size: 15px;
+}
+
+.bundle-price small {
+  font-size: 10px;
+}
+
+.bundle-save {
+  font-size: 10px;
+}
+
+.bundle-flag {
+  padding: 4px 9px;
+  font-size: 9px;
+}
+
+.shipping-nudge {
+  padding: 11px 13px;
+  font-size: 12px;
+}
+
+.trust-row > div {
+  font-size: 11px;
+}
+
+.trust-row .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.payment-label {
+  font-size: 10px;
+}
+
+.payment-chip {
+  padding: 5px 8px;
+  font-size: 9px;
+}
+
+.guarantee strong {
+  font-size: 14px;
+}
+
+.guarantee p {
+  font-size: 12px;
+}
+
+.guarantee .small-note {
+  font-size: 9px;
+}
+
+.trust-strip-grid strong {
+  font-size: 13px;
+}
+
+.trust-strip-grid small {
+  font-size: 11px;
+}
+
+.trust-strip-grid .icon {
+  width: 26px;
+  height: 26px;
+}
+
+.how-tab {
+  font-size: 14px;
+}
+
+.how-copy > p {
+  font-size: 15px;
+}
+
+.check-list li {
+  font-size: 13px;
+}
+
+.bento-card p {
+  font-size: 12px;
+}
+
+.bento-card h3 {
+  font-size: 1.4rem;
+}
+
+.comparison-table {
+  font-size: 13px;
+}
+
+.comparison-table thead th {
+  font-size: 11px;
+}
+
+.comparison-table tbody th {
+  font-size: 13px;
+}
+
+.review-card > p {
+  font-size: 13px;
+}
+
+.review-author strong {
+  font-size: 12px;
+}
+
+.review-author small {
+  font-size: 11px;
+}
+
+.faq-item summary {
+  font-size: 14px;
+}
+
+.faq-answer {
+  font-size: 13px;
+}
+
+.footer-col a {
+  font-size: 13px;
+}
+
+.footer-brand > p {
+  font-size: 13px;
+}
+
+.header-order {
+  min-height: 42px;
+  font-size: 13px;
+}
+
+.primary-nav {
+  font-size: 14px;
+}
+
+.gallery-badge {
+  font-size: 11px;
+}
+
+.gallery-hint {
+  font-size: 11px;
+}
+
+.proof-item {
+  font-size: 11px;
+}
+
+.proof-item strong {
+  font-size: 11px;
+}
+
+.cod-fineprint {
+  font-size: 9px;
+}
+
+.checkout-form label {
+  font-size: 10px;
+}
+
+.checkout-form input,
+.checkout-form select,
+.checkout-form textarea {
+  font-size: 13px;
+}
+
+.order-pack strong {
+  font-size: 14px;
+}
+
+.order-pack small,
+.order-pack b {
+  font-size: 11px;
+}
+
+.order-pack b {
+  font-size: 14px;
+}
+
+.order-summary-pack strong {
+  font-size: 12px;
+}
+
+.order-summary-pack span {
+  font-size: 10px;
+}
+
+.checkout-note {
+  font-size: 9px;
+}
+
+/* ---------- Bounce de etiqueta y detalles ---------- */
+
+.bundle-flag {
+  animation: flag-bounce 3s var(--ease) infinite;
+}
+
+@keyframes flag-bounce {
+  0%, 82%, 100% { transform: translateY(0); }
+  86% { transform: translateY(-3px); }
+  90% { transform: translateY(0); }
+}
+
+.gallery-badge {
+  animation: badge-pulse 3.2s var(--ease) infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* ---------- Desktop ---------- */
+
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 120px;
+  }
+
+  .sticky-buy-bar {
+    right: auto;
+    bottom: 18px;
+    left: 50%;
+    width: min(860px, calc(100% - 40px));
+    padding: 10px 12px 10px 18px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    transform: translateX(-50%);
+    box-shadow: 0 24px 60px -26px rgba(18, 60, 63, 0.55);
+  }
+
+  .sticky-buy-info {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .sticky-buy-info span {
+    font-size: 12px;
+  }
+
+  .sticky-buy-info strong {
+    font-size: 26px;
+  }
+
+  .sticky-buy-info small {
+    font-size: 11px;
+  }
+
+  .sticky-buy-button {
+    min-height: 62px;
+    padding: 0 26px;
+    font-size: 15px;
+  }
+
+  .offer-pop {
+    bottom: 120px;
+  }
+
+  .consent-banner {
+    bottom: 120px;
+  }
+}
+
+/* ---------- Móvil ---------- */
+
+@media (max-width: 767px) {
+  .announcement-track span {
+    padding: 11px 16px;
+    font-size: 12px;
+  }
+
+  .announcement-track span::after {
+    margin-left: 16px;
+  }
+
+  .buybox h1 {
+    font-size: clamp(2.9rem, 9.6vw, 3.6rem);
+  }
+
+  .buybox-sub {
+    font-size: 14px;
+  }
+
+  .sales-proof {
+    gap: 6px;
+  }
+
+  .sales-chip {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .trend-badge {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .gallery-trend {
+    right: 12px;
+    bottom: 12px;
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+
+  .btn-add.btn-cta {
+    min-height: 62px;
+    padding-left: 18px;
+    padding-right: 8px;
+    font-size: 14px;
+  }
+
+  .btn-add.btn-cta .btn-price {
+    font-size: 14px;
+  }
+
+  .sticky-cta-long {
+    display: none;
+  }
+
+  .sticky-cta-short {
+    display: inline;
+  }
+
+  .sticky-buy-button {
+    min-height: 56px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+
+  .sticky-buy-info strong {
+    font-size: 22px;
+  }
+
+  .sticky-buy-info span {
+    font-size: 10px;
+  }
+
+  .sticky-buy-info small {
+    font-size: 9px;
+  }
+
+  .consent-banner {
+    bottom: 92px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-track,
+  .trend-badge,
+  .trend-dot,
+  .gallery-trend,
+  .gallery-badge,
+  .bundle-flag,
+  .btn-cta {
+    animation: none !important;
+  }
+
+  .announcement-marquee {
+    overflow-x: auto;
+  }
+}
+
+/* Refuerzo final de legibilidad comercial */
+.sales-chip {
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.trust-row > div {
+  font-size: 13px;
+}
+
+.trust-row .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.price-badge {
+  font-size: 13px;
+}
+
+.shipping-nudge {
+  font-size: 13px;
+}
+
+.payment-label {
+  font-size: 11px;
+}
+
+.payment-chip {
+  font-size: 10px;
+}
+
+.guarantee strong {
+  font-size: 15px;
+}
+
+.guarantee p {
+  font-size: 13px;
+}
+
+.trust-strip-grid strong {
+  font-size: 14px;
+}
+
+.trust-strip-grid small {
+  font-size: 12px;
+}
+
+.announcement-track span {
+  padding: 14px 24px;
+  font-size: 15px;
+}
+
+.trend-badge {
+  font-size: 12px;
+}
+
+.sticky-buy-info small {
+  font-size: 11px;
+}
+
+.sticky-buy-button {
+  min-height: 64px;
+  font-size: 16px;
+}
+
+@media (max-width: 767px) {
+  .sales-chip {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .trust-row > div {
+    font-size: 12px;
+  }
+
+  .trust-strip-grid strong {
+    font-size: 13px;
+  }
+
+  .trust-strip-grid small {
+    font-size: 11px;
+  }
+
+  .announcement-track span {
+    padding: 11px 16px;
+    font-size: 13px;
+  }
+
+  .trend-badge {
+    font-size: 11px;
+  }
+
+  .sticky-buy-info small {
+    font-size: 10px;
+  }
+
+  .sticky-buy-button {
+    min-height: 58px;
+    font-size: 15px;
+  }
+}

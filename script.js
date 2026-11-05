@@ -740,17 +740,6 @@
     window.addEventListener("scroll", update, { passive: true });
   };
 
-  const setupMobileBar = () => {
-    if (!els.mobileBar || !els.buySection) return;
-    if (!("IntersectionObserver" in window)) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      const show = !entry.isIntersecting || window.scrollY < 200;
-      els.mobileBar.classList.toggle("is-visible", show);
-      document.body.classList.toggle("has-mobile-bar", show);
-    }, { threshold: 0 });
-    observer.observe(els.buySection);
-  };
-
   /* ---------- Eventos ---------- */
 
   const bindEvents = () => {
@@ -910,7 +899,6 @@
     setupReveal();
     setupScrollDepth();
     setupHeader();
-    setupMobileBar();
     setupOfferPop();
 
     track("view_item", {

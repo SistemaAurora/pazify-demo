@@ -71,10 +71,6 @@
 <body id="top">
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <div class="demo-banner" data-demo-banner role="status" hidden>
-    <div class="container">Vista previa · Los pedidos no se registran todavía. Configura el endpoint de pedidos para activar la tienda.</div>
-  </div>
-
   <svg class="svg-sprite" aria-hidden="true" focusable="false">
     <symbol id="i-paw" viewBox="0 0 24 24">
       <path d="M12 20c-3.8 0-6.5-2.2-6.5-5.1 0-2 1.6-3.3 3.5-3.3 1.3 0 2.3.6 3 1.6.7-1 1.7-1.6 3-1.6 1.9 0 3.5 1.3 3.5 3.3 0 2.9-2.7 5.1-6.5 5.1Z" fill="currentColor"/>
@@ -114,13 +110,19 @@
     <symbol id="i-phone" viewBox="0 0 24 24"><path d="M7 3.5h3l1.2 4-2 1.5a12 12 0 0 0 5.8 5.8l1.5-2 4 1.2v3a2 2 0 0 1-2.2 2A17.5 17.5 0 0 1 5 5.7 2 2 0 0 1 7 3.5Z"/></symbol>
   </svg>
 
-  <div class="announcement" role="region" aria-label="Ventajas de compra">
-    <div class="container announcement-inner">
-      <span><svg class="icon"><use href="#i-truck"/></svg> Envío gratis a todo el Perú</span>
-      <span class="announcement-dot" aria-hidden="true"></span>
-      <span>Pago contra entrega</span>
-      <span class="announcement-dot" aria-hidden="true"></span>
-      <span>Garantía de 30 días</span>
+  <div class="announcement" role="region" aria-label="Envío gratis, pago contra entrega y garantía">
+    <span class="sr-only">Envío gratis a todo el Perú. Pago contra entrega. Garantía de 30 días. Paga al recibir.</span>
+    <div class="announcement-marquee" aria-hidden="true">
+      <div class="announcement-track">
+        <span>🚚 Envío gratis a todo el Perú</span>
+        <span>💵 Pago contra entrega</span>
+        <span>🛡️ Garantía de 30 días</span>
+        <span>📦 Paga al recibir</span>
+        <span>🚚 Envío gratis a todo el Perú</span>
+        <span>💵 Pago contra entrega</span>
+        <span>🛡️ Garantía de 30 días</span>
+        <span>📦 Paga al recibir</span>
+      </div>
     </div>
   </div>
 
@@ -159,6 +161,7 @@
                 <img data-gallery-main src="assets/img/gallery-hero-pro-800.jpg" srcset="assets/img/gallery-hero-pro-800.jpg 800w, assets/img/gallery-hero-pro.jpg 1200w" sizes="(max-width: 980px) calc(100vw - 36px), 560px" alt="Botella Pazify 3 en 1 en una escena de estudio premium" width="1200" height="1500" fetchpriority="high">
               </button>
               <span class="gallery-badge">3 EN 1</span>
+              <span class="gallery-trend">🔥 Tendencia</span>
               <span class="gallery-hint"><svg class="icon"><use href="#i-zoom"/></svg> Ampliar</span>
             </div>
 
@@ -197,13 +200,14 @@
           </div>
 
           <div class="buybox">
-            <div class="buybox-eyebrow"><span class="pill">Nuevo</span><span>Botella de paseo 3 en 1</span></div>
-            <h1>Todo lo que tu perro necesita, <em>en una sola mano.</em></h1>
+            <div class="buybox-eyebrow"><span class="trend-badge"><span class="trend-dot"></span>🔥 Producto en tendencia</span><span>Botella de paseo 3 en 1</span></div>
+            <h1>Todo lo que tu mascota necesita, <em>en una sola mano.</em></h1>
             <p class="buybox-sub">Agua fresca, snacks y bolsas para popó en un solo accesorio. Menos peso, menos olvidos y más tiempo disfrutando el paseo.</p>
 
-            <div class="cod-row">
-              <span class="cod-pill"><svg class="icon"><use href="#i-truck"/></svg> Pago contra entrega</span>
-              <span class="cod-text">Pides hoy y pagas cuando lo recibes.</span>
+            <div class="sales-proof">
+              <span class="sales-chip">✅ Pago contra entrega</span>
+              <span class="sales-chip">🚚 Envío gratis</span>
+              <span class="sales-chip">🛡️ Garantía 30 días</span>
             </div>
 
             <ul class="quick-benefits">
@@ -852,9 +856,17 @@
 
   <div class="toast" data-toast role="status" aria-live="polite"></div>
 
-  <aside class="mobile-buy-bar" data-mobile-buy-bar aria-label="Compra rápida">
-    <div><span>Pazify 3 en 1</span><strong data-mobile-price>S/ 89.90</strong></div>
-    <button class="btn btn-primary btn-cta" type="button" data-open-order>Comprar <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span></button>
+  <aside class="sticky-buy-bar" data-mobile-buy-bar aria-label="Compra rápida">
+    <div class="sticky-buy-info">
+      <span>Pazify 3 en 1</span>
+      <strong data-mobile-price>S/ 89.90</strong>
+      <small>Pago contra entrega</small>
+    </div>
+    <button class="btn btn-primary btn-cta sticky-buy-button" type="button" data-open-order>
+      <span class="sticky-cta-long">Comprar contra entrega</span>
+      <span class="sticky-cta-short">Comprar</span>
+      <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
+    </button>
   </aside>
 
   <aside class="whatsapp-float-wrap" aria-label="Ayuda por WhatsApp">
