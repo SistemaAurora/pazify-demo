@@ -15,9 +15,9 @@
       image: "assets/img/product-cutout.webp",
     },
     packs: {
-      1: { units: 1, price: 89.9, perUnit: 89.9, label: "1 unidad", savings: 0 },
-      2: { units: 2, price: 149.9, perUnit: 74.95, label: "2 unidades", savings: 29.9 },
-      3: { units: 3, price: 199.9, perUnit: 66.63, label: "3 unidades", savings: 69.8 },
+      1: { units: 1, price: 89.9, compareAt: 119.9, perUnit: 89.9, label: "1 unidad", savings: 30 },
+      2: { units: 2, price: 149.9, compareAt: 209.9, perUnit: 74.95, label: "2 unidades", savings: 60 },
+      3: { units: 3, price: 199.9, compareAt: 299.9, perUnit: 66.63, label: "3 unidades", savings: 100 },
     },
     offerPopDelay: 12000,
     orderEndpoint: "", // URL que recibe POST JSON y devuelve {ok:true, orderId:"..."}.
@@ -29,6 +29,7 @@
     },
   };
 
+  const LOCATIONS = window.PAZIFY_LOCATIONS || {};
   const OFFER_KEY = "pazify_offer_pop_seen";
   const CONSENT_KEY = "pazify_consent_v1";
   const isDemo = () => CONFIG.demoMode || !CONFIG.orderEndpoint;
@@ -49,6 +50,7 @@
     header: $("[data-header]"),
     overlay: $("[data-overlay]"),
     price: $("[data-price]"),
+    priceOld: $("[data-price-old]"),
     priceNote: $("[data-price-note]"),
     priceBadge: $("[data-price-badge]"),
     orderPriceCta: $("[data-order-price-cta]"),
@@ -64,7 +66,13 @@
     demoOrderNote: $("[data-demo-order-note]"),
     orderPackLabel: $("[data-order-pack-label]"),
     orderPackPrice: $("[data-order-pack-price]"),
+    orderPackCompare: $("[data-order-pack-compare]"),
     orderTotal: $("[data-order-total]"),
+    mobileOld: $("[data-mobile-old]"),
+    departmentSelect: $("[data-department-select]"),
+    citySelect: $("[data-city-select]"),
+    cityOtherWrap: $("[data-city-other-wrap]"),
+    cityOtherInput: $('input[name="cityOther"]'),
     galleryMain: $("[data-gallery-main]"),
     galleryThumbs: $$("[data-gallery-thumbs] .thumb"),
     lightbox: $("#lightbox"),
@@ -168,18 +176,49 @@
     },
   };
 
+
+  const populateCities = (department) => {
+    if (!els.citySelect) return;
+    const cities = LOCATIONS[department] || [];
+    els.citySelect.innerHTML = [
+      '<option value="">Selecciona tu ciudad o distrito</option>',
+      ...cities.map((city) => `<option value="${city}">${city}</option>`),
+      '<option value="Otro">Otro distrito / ciudad</option>',
+    ].join("");
+    els.citySelect.disabled = !department;
+    els.citySelect.value = "";
+    if (els.cityOtherWrap) els.cityOtherWrap.hidden = true;
+    if (els.cityOtherInput) {
+      els.cityOtherInput.required = false;
+      els.cityOtherInput.value = "";
+    }
+  };
+
+  const syncCityOther = () => {
+    if (!els.citySelect) return;
+    const isOther = els.citySelect.value === "Otro";
+    if (els.cityOtherWrap) els.cityOtherWrap.hidden = !isOther;
+    if (els.cityOtherInput) {
+      els.cityOtherInput.required = isOther;
+      if (isOther) window.setTimeout(() => els.cityOtherInput.focus(), 40);
+    }
+  };
+
   /* ---------- Packs ---------- */
 
   const syncPackUI = () => {
     const pack = CONFIG.packs[state.selectedPack] || CONFIG.packs[1];
 
     if (els.price) els.price.textContent = money(pack.price);
-    if (els.priceNote) els.priceNote.textContent = `${pack.label} · ${money(pack.perUnit)} c/u`;
-    if (els.priceBadge) els.priceBadge.textContent = "Envío gratis";
+    if (els.priceOld) els.priceOld.textContent = money(pack.compareAt);
+    if (els.priceNote) els.priceNote.textContent = `${pack.label} · ${money(pack.perUnit)} c/u · Ahorras ${money(pack.savings)}`;
+    if (els.priceBadge) els.priceBadge.textContent = "🚚 Envío gratis";
     if (els.orderPriceCta) els.orderPriceCta.textContent = money(pack.price);
     if (els.mobilePrice) els.mobilePrice.textContent = money(pack.price);
+    if (els.mobileOld) els.mobileOld.textContent = money(pack.compareAt);
     if (els.orderPackLabel) els.orderPackLabel.textContent = pack.label;
     if (els.orderPackPrice) els.orderPackPrice.textContent = money(pack.price);
+    if (els.orderPackCompare) els.orderPackCompare.textContent = money(pack.compareAt);
     if (els.orderTotal) els.orderTotal.textContent = money(pack.price);
 
     $$('[data-bundle-form] input[name="bundle"]').forEach((input) => {
@@ -274,9 +313,6 @@
     return `${demo ? "DEMO" : "PZ"}-${date}-${suffix}`;
   };
 
-  const deliveryLabel = (value) =>
-    value === "agencia" ? "Recojo en agencia (coordinar)" : "Entrega a domicilio";
-
   const applyDemoState = () => {
     const demo = isDemo();
     document.querySelectorAll("[data-demo-only]").forEach((element) => {
@@ -302,6 +338,7 @@
     if (els.orderForm) {
       els.orderForm.hidden = false;
       els.orderForm.reset();
+      populateCities("");
     }
     if (els.orderStatus) els.orderStatus.textContent = "";
     applyDemoState();
@@ -332,8 +369,9 @@
       `Producto: ${CONFIG.product.name}`,
       `Pack: ${pack.label}`,
       `Cantidad: ${pack.units} unidad(es)`,
-      `Precio total: ${money(pack.price)}`,
-      `Modalidad de entrega: ${deliveryLabel(data.delivery)}`,
+      `Precio regular: ${money(pack.compareAt)}`,
+      `Precio de lanzamiento: ${money(pack.price)}`,
+      `Ahorro: ${money(pack.savings)}`,
       "",
       "Envío: Gratis a todo el Perú (sujeto a cobertura)",
       "Método de pago: contra entrega",
@@ -383,10 +421,11 @@
       name: String(formData.get("name") || "").trim(),
       phone: normalizePeruPhone(formData.get("phone")),
       department: String(formData.get("department") || "").trim(),
-      city: String(formData.get("city") || "").trim(),
+      city: String(formData.get("city") || "").trim() === "Otro"
+        ? String(formData.get("cityOther") || "").trim()
+        : String(formData.get("city") || "").trim(),
       address: String(formData.get("address") || "").trim(),
       reference: String(formData.get("reference") || "").trim(),
-      delivery: String(formData.get("delivery") || "domicilio"),
     };
 
     const pack = CONFIG.packs[state.selectedPack];
@@ -434,11 +473,12 @@
           city: data.city,
           address: data.address,
           reference: data.reference,
-          delivery: data.delivery,
           pack: state.selectedPack,
           packLabel: pack.label,
           quantity: pack.units,
           price: pack.price,
+          compareAt: pack.compareAt,
+          savings: pack.savings,
           currency: CONFIG.currency,
           consent: true,
           source: "web",
@@ -802,6 +842,13 @@
       phoneInput.addEventListener("blur", () => validatePeruPhone(phoneInput));
     }
 
+    if (els.departmentSelect) {
+      els.departmentSelect.addEventListener("change", () => populateCities(els.departmentSelect.value));
+    }
+    if (els.citySelect) {
+      els.citySelect.addEventListener("change", syncCityOther);
+    }
+
     const tabs = $$("[data-tab]");
     tabs.forEach((tab, index) => {
       tab.addEventListener("click", () => activateTab(tab.dataset.tab));
@@ -891,6 +938,7 @@
 
   const init = () => {
     syncPackUI();
+    populateCities(els.departmentSelect?.value || "");
     applyDemoState();
     setupExternalLinks();
     bindEvents();
