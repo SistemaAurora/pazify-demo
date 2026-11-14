@@ -20,7 +20,7 @@
       3: { units: 3, price: 199.9, compareAt: 299.9, perUnit: 66.63, label: "3 unidades", savings: 100 },
     },
     offerPopDelay: 12000,
-    orderEndpoint: "", // URL que recibe POST JSON y devuelve {ok:true, orderId:"..."}.
+    orderEndpoint: "https://slim-constantly-strain-gpl.trycloudflare.com/order", // Temporal: túnel local. Para producción, usa el Worker de backend/.
     orderEndpointTimeout: 15000,
     analytics: {
       gtmId: "",
@@ -550,10 +550,31 @@
         }
       }
     } catch (error) {
-      if (els.orderStatus) {
+      if (CONFIG.whatsapp) {
+        const fallbackUrl = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
+        const fallbackWindow = window.open(fallbackUrl, "_blank");
+        if (fallbackWindow) {
+          fallbackWindow.opener = null;
+          showOrderSuccess({
+            title: "Pedido enviado por WhatsApp",
+            message: "No se pudo registrar en el panel, pero abrimos WhatsApp con tu pedido. Envía el mensaje para que podamos confirmarlo.",
+            code: state.lastOrderCode,
+            demo: false,
+          });
+          track("whatsapp_order_started", {
+            transaction_id: state.lastOrderCode,
+            currency: CONFIG.currency,
+            value: pack.price,
+            pack: pack.label,
+            fallback: true,
+          });
+        } else if (els.orderStatus) {
+          els.orderStatus.textContent = "No pudimos registrar el pedido ni abrir WhatsApp. Permite las ventanas emergentes e intenta de nuevo.";
+        }
+      } else if (els.orderStatus) {
         els.orderStatus.textContent = "No pudimos registrar tu pedido. No se ha confirmado nada. Intenta de nuevo o escríbenos por WhatsApp.";
       }
-      showToast("No se registró el pedido. Intenta de nuevo.");
+      showToast("No se pudo registrar en el panel. Usamos WhatsApp como respaldo.");
     } finally {
       window.clearTimeout(timeoutId);
       state.submitting = false;
@@ -563,7 +584,7 @@
 
   /* ---------- Galería ---------- */
 
-  const setGalleryImage = (thumb) => {
+  const setGalleryImage = (thumb, trackEvent = true) => {
     if (!thumb || !els.galleryMain) return;
     const src = thumb.dataset.src;
     const alt = thumb.dataset.alt || "";
@@ -577,7 +598,7 @@
       item.classList.toggle("is-active", active);
       item.setAttribute("aria-selected", String(active));
     });
-    track("gallery_view", { image: src });
+    if (trackEvent) track("gallery_view", { image: src });
   };
 
   const openLightbox = () => {
@@ -804,6 +825,49 @@
     window.addEventListener("scroll", update, { passive: true });
   };
 
+
+  const setupGalleryAutoplay = () => {
+    if (!els.galleryMain || !els.galleryThumbs.length) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let index = Math.max(0, els.galleryThumbs.findIndex((thumb) => thumb.classList.contains("is-active")));
+    let paused = false;
+    let resumeTimer;
+
+    const pause = (duration = 0) => {
+      paused = true;
+      window.clearTimeout(resumeTimer);
+      if (duration) {
+        resumeTimer = window.setTimeout(() => { paused = false; }, duration);
+      }
+    };
+
+    const resume = () => {
+      window.clearTimeout(resumeTimer);
+      paused = false;
+    };
+
+    els.galleryThumbs.forEach((thumb, thumbIndex) => {
+      thumb.addEventListener("click", () => {
+        index = thumbIndex;
+        pause(12000);
+      });
+      thumb.addEventListener("focus", () => pause());
+      thumb.addEventListener("blur", () => resume());
+    });
+
+    els.galleryMain.addEventListener("mouseenter", () => pause());
+    els.galleryMain.addEventListener("mouseleave", () => resume());
+    els.galleryMain.addEventListener("focusin", () => pause());
+    els.galleryMain.addEventListener("focusout", () => resume());
+
+    window.setInterval(() => {
+      if (paused || activeDialog || document.hidden) return;
+      index = (index + 1) % els.galleryThumbs.length;
+      setGalleryImage(els.galleryThumbs[index], false);
+    }, 5500);
+  };
+
   /* ---------- Eventos ---------- */
 
   const bindEvents = () => {
@@ -967,6 +1031,7 @@
     setupExternalLinks();
     bindEvents();
     setupVideo();
+    setupGalleryAutoplay();
     setupConsent();
     setupReveal();
     setupScrollDepth();
