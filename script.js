@@ -25,7 +25,7 @@
       2: "",
       3: "",
     },
-    orderEndpoint: "https://pazify-orders.dramatic-macrame.workers.dev/order", // Worker gratuito temporal. Reclámalo en Cloudflare.
+    orderEndpoint: "https://pazify-orders-live.troubled-walrus.workers.dev/order", // Worker gratuito temporal. Reclámalo en Cloudflare.
     orderEndpointTimeout: 15000,
     analytics: {
       gtmId: "",
