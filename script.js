@@ -30,7 +30,7 @@
     analytics: {
       gtmId: "",
       ga4Id: "",
-      metaPixelId: "",
+      metaPixelId: "1708740150670609",
     },
   };
 
@@ -112,6 +112,26 @@
     scroll_depth: "ScrollDepth",
   };
 
+  const META_STANDARD_EVENTS = new Set(["ViewContent", "InitiateCheckout", "Lead", "Contact"]);
+
+  const metaParams = (data = {}) => {
+    const params = {};
+    if (data.currency) params.currency = data.currency;
+    if (Number.isFinite(data.value)) params.value = data.value;
+    if (Array.isArray(data.items) && data.items.length) {
+      const ids = data.items.map((item) => item.item_id).filter(Boolean);
+      if (ids.length) params.content_ids = ids;
+      params.content_type = "product";
+      if (data.items[0].item_name) params.content_name = data.items[0].item_name;
+      params.num_items = data.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    } else if (data.item_variant) {
+      params.content_name = data.item_variant;
+    }
+    if (data.transaction_id) params.transaction_id = data.transaction_id;
+    if (data.payment_method) params.payment_method = data.payment_method;
+    return params;
+  };
+
   const track = (event, data = {}) => {
     const payload = { event, ...data };
     window.dataLayer = window.dataLayer || [];
@@ -130,14 +150,31 @@
         whatsapp_click: "Contact",
       };
       const metaEvent = metaMap[event] || event;
-      if (metaEvent === "SelectPack") window.fbq("trackCustom", metaEvent, data);
-      else window.fbq("track", metaEvent, data);
+      const params = metaParams(data);
+      if (META_STANDARD_EVENTS.has(metaEvent)) window.fbq("track", metaEvent, params);
+      else window.fbq("trackCustom", metaEvent, params);
     }
 
     document.dispatchEvent(new CustomEvent("pazify:track", { detail: payload }));
     if (new URLSearchParams(window.location.search).has("debug")) {
       console.debug("[pazify]", event, data);
     }
+  };
+
+  const trackViewItem = () => {
+    if (window.__pazifyViewItemTracked) return;
+    window.__pazifyViewItemTracked = true;
+    track("view_item", {
+      currency: CONFIG.currency,
+      value: CONFIG.packs[1].price,
+      items: [{
+        item_name: `${CONFIG.product.name} — 1 unidad`,
+        item_id: "PAZ-3IN1-1",
+        price: CONFIG.packs[1].price,
+        quantity: 1,
+        item_variant: "1 unidad",
+      }],
+    });
   };
 
   const showToast = (message, duration = 3400) => {
@@ -408,7 +445,12 @@
     } catch {
       /* noop */
     }
-    window.location.href = `gracias.html?code=${encodeURIComponent(code)}`;
+    const finish = () => {
+      window.location.href = `gracias.html?code=${encodeURIComponent(code)}`;
+    };
+    // Deja que el pixel alcance a enviar Lead antes de navegar.
+    if (typeof window.fbq === "function") window.setTimeout(finish, 350);
+    else finish();
   };
 
   const handleOrderSubmit = async (event) => {
@@ -684,6 +726,8 @@
       window.fbq("init", metaPixelId);
       window.fbq("track", "PageView");
     }
+
+    trackViewItem();
   };
 
   const setupConsent = () => {
@@ -1012,18 +1056,6 @@
     setupScrollDepth();
     setupHeader();
     setupOfferPop();
-
-    track("view_item", {
-      currency: CONFIG.currency,
-      value: CONFIG.packs[1].price,
-      items: [{
-        item_name: `${CONFIG.product.name} — 1 unidad`,
-        item_id: "PAZ-3IN1-1",
-        price: CONFIG.packs[1].price,
-        quantity: 1,
-        item_variant: "1 unidad",
-      }],
-    });
   };
 
   window.PazifyStore = {
