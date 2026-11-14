@@ -15,9 +15,9 @@
       image: "assets/img/pazify-product-main.webp",
     },
     packs: {
-      1: { units: 1, price: 89.9, compareAt: 119.9, perUnit: 89.9, label: "1 unidad", savings: 30 },
-      2: { units: 2, price: 149.9, compareAt: 209.9, perUnit: 74.95, label: "2 unidades", savings: 60 },
-      3: { units: 3, price: 199.9, compareAt: 299.9, perUnit: 66.63, label: "3 unidades", savings: 100 },
+      1: { units: 1, price: 49.9, compareAt: 89.9, perUnit: 49.9, label: "1 unidad", savings: 40 },
+      2: { units: 2, price: 89.9, compareAt: 149.9, perUnit: 44.95, label: "2 unidades", savings: 60 },
+      3: { units: 3, price: 129.9, compareAt: 199.9, perUnit: 43.3, label: "3 unidades", savings: 70 },
     },
     offerPopDelay: 12000,
     zipagoLinks: {
