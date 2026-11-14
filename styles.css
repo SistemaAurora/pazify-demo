@@ -6249,3 +6249,42 @@ body {
   font-size: 8px;
   line-height: 1.4;
 }
+
+/* Galería y video con imágenes reales del proveedor */
+.gallery-main {
+  aspect-ratio: 1 / 1;
+  background: var(--cream-2);
+}
+
+.gallery-open img {
+  object-fit: contain;
+  background: var(--cream-2);
+}
+
+.thumb {
+  aspect-ratio: 1 / 1;
+}
+
+.video-poster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #071f21;
+}
+
+.video-poster video {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 68dvh;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: #000;
+}
+
+.video-poster img {
+  width: auto;
+  max-width: 100%;
+  max-height: 68dvh;
+  object-fit: contain;
+}

@@ -7,12 +7,12 @@
   "use strict";
 
   const CONFIG = {
-    demoMode: true,
-    whatsapp: "", // Ejemplo: "51987654321" (código de país + número, sin + ni espacios).
+    demoMode: false,
+    whatsapp: "51972841004", // +51 972 841 004
     currency: "PEN",
     product: {
       name: "Pazify 3 en 1",
-      image: "assets/img/product-cutout.webp",
+      image: "assets/img/pazify-product-main.webp",
     },
     packs: {
       1: { units: 1, price: 89.9, compareAt: 119.9, perUnit: 89.9, label: "1 unidad", savings: 30 },
@@ -32,7 +32,7 @@
   const LOCATIONS = window.PAZIFY_LOCATIONS || {};
   const OFFER_KEY = "pazify_offer_pop_seen";
   const CONSENT_KEY = "pazify_consent_v1";
-  const isDemo = () => CONFIG.demoMode || !CONFIG.orderEndpoint;
+  const isDemo = () => CONFIG.demoMode || (!CONFIG.orderEndpoint && !CONFIG.whatsapp);
 
   const state = {
     selectedPack: 1,
@@ -99,6 +99,7 @@
     select_item: "SelectPack",
     begin_checkout: "InitiateCheckout",
     order_created: "OrderCreated",
+    whatsapp_order_started: "WhatsAppOrderStarted",
     whatsapp_click: "WhatsAppClick",
     offer_pop_view: "OfferPopView",
     faq_open: "FAQOpen",
@@ -451,6 +452,29 @@
         demo: true,
       });
       showToast("Vista previa creada. No se ha registrado ningún pedido.");
+      return;
+    }
+
+    if (!CONFIG.orderEndpoint && CONFIG.whatsapp) {
+      const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
+      const whatsappWindow = window.open(url, "_blank");
+      if (!whatsappWindow) {
+        if (els.orderStatus) els.orderStatus.textContent = "Permite las ventanas emergentes para abrir WhatsApp.";
+        return;
+      }
+      whatsappWindow.opener = null;
+      showOrderSuccess({
+        title: "Pedido listo para WhatsApp",
+        message: "Abrimos WhatsApp con tu pedido. Envía el mensaje para que podamos confirmar la entrega. Aún no está registrado en el sitio.",
+        code: localCode,
+        demo: false,
+      });
+      track("whatsapp_order_started", {
+        transaction_id: localCode,
+        currency: CONFIG.currency,
+        value: pack.price,
+        pack: pack.label,
+      });
       return;
     }
 
