@@ -115,11 +115,11 @@
     <div class="announcement-marquee" aria-hidden="true">
       <div class="announcement-track">
         <span>🚚 Envío gratis a todo el Perú</span>
-        <span>💵 Pago contra entrega</span>
+        <span>💵 Pago contra entrega o tarjeta</span>
         <span>🛡️ Garantía de 30 días</span>
         <span>📦 Paga al recibir</span>
         <span>🚚 Envío gratis a todo el Perú</span>
-        <span>💵 Pago contra entrega</span>
+        <span>💵 Pago contra entrega o tarjeta</span>
         <span>🛡️ Garantía de 30 días</span>
         <span>📦 Paga al recibir</span>
       </div>
@@ -136,7 +136,6 @@
       <nav class="primary-nav" id="primary-nav" aria-label="Navegación principal">
         <a href="#comprar">Comprar</a>
         <a href="#como-funciona">Cómo funciona</a>
-        <a href="#opiniones">Opiniones</a>
         <a href="#faq">Preguntas</a>
       </nav>
 
@@ -184,6 +183,15 @@
               <button class="thumb" type="button" role="tab" aria-selected="false" data-src="assets/img/pazify-lifestyle-2.webp" data-alt="Detalle de Pazify en un paseo real" aria-label="Detalle de Pazify en un paseo real">
                 <img src="assets/img/thumbs/pazify-lifestyle-2.jpg" alt="" width="160" height="160" loading="lazy" decoding="async">
               </button>
+            </div>
+
+            <div class="gallery-dots" data-gallery-dots role="group" aria-label="Indicador de imágenes">
+              <button class="gallery-dot is-active" type="button" data-gallery-dot="0" aria-label="Ver imagen 1" aria-pressed="true"></button>
+              <button class="gallery-dot" type="button" data-gallery-dot="1" aria-label="Ver imagen 2" aria-pressed="false"></button>
+              <button class="gallery-dot" type="button" data-gallery-dot="2" aria-label="Ver imagen 3" aria-pressed="false"></button>
+              <button class="gallery-dot" type="button" data-gallery-dot="3" aria-label="Ver imagen 4" aria-pressed="false"></button>
+              <button class="gallery-dot" type="button" data-gallery-dot="4" aria-label="Ver imagen 5" aria-pressed="false"></button>
+              <button class="gallery-dot" type="button" data-gallery-dot="5" aria-label="Ver imagen 6" aria-pressed="false"></button>
             </div>
 
             <button class="video-thumb" type="button" data-video-open>
@@ -257,17 +265,18 @@
               </fieldset>
             </form>
 
-            <p class="shipping-nudge shipping-nudge-green" data-shipping-nudge><span class="pulse-dot"></span> 🚚 Envío gratis a todo el Perú · Paga al recibir</p>
+            <p class="shipping-nudge shipping-nudge-green" data-shipping-nudge><span class="pulse-dot"></span> 🚚 Envío gratis a todo el Perú · Pago contra entrega o tarjeta</p>
 
             <div class="buy-actions">
               <button class="btn btn-primary btn-add btn-cta" type="button" data-open-order>
-                Comprar contra entrega <span class="btn-price" data-order-price-cta>S/ 89.90</span>
+                Comprar ahora <span class="btn-price" data-order-price-cta>S/ 89.90</span>
                 <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
               </button>
             </div>
 
             <div class="sales-proof">
               <span class="sales-chip">✅ Pago contra entrega</span>
+              <span class="sales-chip">🔒 Pago seguro</span>
               <span class="sales-chip">🚚 Envío gratis</span>
               <span class="sales-chip">🛡️ Garantía 30 días</span>
             </div>
@@ -287,10 +296,11 @@
             </div>
 
             <div class="payment-row">
-              <span class="payment-label">Pagas al recibir con</span>
-              <span class="payment-chip">Efectivo</span>
+              <span class="payment-label">Paga como prefieras</span>
+              <span class="payment-chip">Contra entrega</span>
               <span class="payment-chip">Yape</span>
               <span class="payment-chip">Plin</span>
+              <span class="payment-chip">Tarjeta próximamente</span>
               <span class="payment-note">según disponibilidad</span>
             </div>
 
@@ -329,6 +339,29 @@
           <div><svg class="icon"><use href="#i-shield"/></svg><span><strong>Pago contra entrega</strong><small>pagas al recibir</small></span></div>
           <div><svg class="icon"><use href="#i-lock"/></svg><span><strong>Garantía 30 días</strong><small>compra protegida</small></span></div>
           <div><svg class="icon"><use href="#i-whatsapp"/></svg><span><strong>Atención por WhatsApp</strong><small>te ayudamos a elegir</small></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="video-showcase section" id="video">
+      <div class="container video-showcase-grid">
+        <div class="video-showcase-copy">
+          <p class="eyebrow">VIDEO REAL · 21 SEGUNDOS</p>
+          <h2>Mira Pazify en acción.</h2>
+          <p>Agua, snacks y bolsas en un solo accesorio. Mira el video real del producto y descubre lo fácil que es salir de paseo con todo en una mano.</p>
+          <div class="video-points">
+            <span>💧 Agua</span>
+            <span>🦴 Snacks</span>
+            <span>💩 Bolsas</span>
+          </div>
+          <button class="btn btn-primary btn-cta" type="button" data-open-order>Comprar ahora <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span></button>
+        </div>
+        <div class="video-showcase-frame">
+          <video controls playsinline preload="metadata" poster="assets/img/pazify-video-poster.jpg">
+            <source src="assets/video/pazify-demo.mp4" type="video/mp4">
+            Tu navegador no soporta video HTML5.
+          </video>
+          <span class="video-badge">▶ Video real · 21 s</span>
         </div>
       </div>
     </section>
@@ -509,62 +542,6 @@
       </div>
     </section>
 
-    <section class="reviews section" id="opiniones">
-      <div class="container">
-        <div class="section-heading split">
-          <div>
-            <p class="eyebrow">HISTORIAS DE PASEOS MÁS LIGEROS</p>
-            <h2>La diferencia se nota en el paseo.</h2>
-          </div>
-          <div class="reviews-meta" data-demo-only hidden>
-            <span class="demo-chip">Opiniones de ejemplo</span>
-            <p>Estas historias son contenido de muestra. Sustitúyelas por reseñas reales antes de publicar.</p>
-          </div>
-        </div>
-
-        <div class="reviews-grid" data-demo-only hidden>
-          <article class="review-feature">
-            <img src="assets/img/pazify-components.webp" alt="Perro feliz mirando hacia arriba en el parque" width="1600" height="1000" loading="lazy">
-            <div class="review-feature-copy">
-              <span class="quote-mark" aria-hidden="true">“</span>
-              <p>Ahora salgo con una sola cosa. El agua no se derrama y Luna bebe sin problema.</p>
-              <span>María G. · Lima</span>
-            </div>
-          </article>
-
-          <div class="review-cards">
-            <article class="review-card">
-              <span class="stars" aria-label="5 estrellas">★★★★★</span>
-              <p>“El compartimento de comida es perfecto para premios en el parque. Ya no cargo tres bolsillos.”</p>
-              <div class="review-author"><span class="avatar">DR</span><span><strong>Diego R.</strong><small>Arequipa</small></span></div>
-            </article>
-            <article class="review-card">
-              <span class="stars" aria-label="5 estrellas">★★★★★</span>
-              <p>“Las bolsas van en la base. Nunca más me doy cuenta de que se acabaron cuando ya es tarde.”</p>
-              <div class="review-author"><span class="avatar">CM</span><span><strong>Carla M.</strong><small>Trujillo</small></span></div>
-            </article>
-            <article class="review-card">
-              <span class="stars" aria-label="5 estrellas">★★★★★</span>
-              <p>“Es compacta, bonita y se limpia rápido. Ya vive en la mochila de paseo.”</p>
-              <div class="review-author"><span class="avatar">AP</span><span><strong>Andrés P.</strong><small>Cusco</small></span></div>
-            </article>
-            <article class="review-card review-card-note">
-              <span class="review-note-icon"><svg class="icon"><use href="#i-quote"/></svg></span>
-              <p>¿Ya tienes tu Pazify? Comparte tu historia y ayuda a más familias a pasear más ligeras.</p>
-              <a class="text-link" href="mailto:hola@pazify.com?subject=Mi%20historia%20con%20Pazify">Compartir mi historia <svg class="icon"><use href="#i-arrow-up-right"/></svg></a>
-            </article>
-          </div>
-        </div>
-
-        <div class="reviews-empty" data-production-only hidden>
-          <span class="bento-icon"><svg class="icon"><use href="#i-quote"/></svg></span>
-          <h3>Aún no hay reseñas verificadas.</h3>
-          <p>Estamos recolectando experiencias reales de clientes. Si ya tienes tu Pazify, comparte la tuya; la publicaremos solo con tu permiso.</p>
-          <a class="btn btn-outline" data-whatsapp-link href="https://wa.me/?text=Hola%20Pazify%2C%20quiero%20compartir%20mi%20experiencia" target="_blank" rel="noopener">Compartir mi experiencia</a>
-        </div>
-      </div>
-    </section>
-
     <section class="faq section" id="faq">
       <div class="container faq-grid">
         <div class="faq-intro">
@@ -660,7 +637,7 @@
           <p class="eyebrow">TU PRÓXIMO PASEO</p>
           <h2>Más paseo. Menos carga.</h2>
           <p>Agua, comida y bolsas en una sola mano. Pide hoy y paga cuando lo recibas.</p>
-          <button class="btn btn-primary btn-cta" type="button" data-open-order>Comprar contra entrega <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span></button>
+          <button class="btn btn-primary btn-cta" type="button" data-open-order>Comprar ahora <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span></button>
           <div class="final-trust">
             <span><svg class="icon"><use href="#i-truck"/></svg> Envío gratis a todo el Perú</span>
             <span><svg class="icon"><use href="#i-shield"/></svg> Pago contra entrega</span>
@@ -689,7 +666,6 @@
         <h3>Tienda</h3>
         <a href="#comprar">Botella 3 en 1</a>
         <a href="#como-funciona">Cómo funciona</a>
-        <a href="#opiniones">Opiniones</a>
         <a href="#faq">Preguntas frecuentes</a>
       </div>
 
@@ -726,7 +702,7 @@
 
       <div class="checkout-head">
         <p class="eyebrow">COMPRA CONTRA ENTREGA</p>
-        <h2 id="order-title">Pide ahora. Paga al recibir.</h2>
+        <h2 id="order-title">Pide ahora. Elige cómo pagar.</h2>
         <p>Sin pagos por adelantado. Elige tu pack, déjanos tus datos y coordinamos la entrega por WhatsApp.</p>
       </div>
 
@@ -790,14 +766,25 @@
           <label class="city-other" data-city-other-wrap hidden>Otro distrito / ciudad<input name="cityOther" type="text" minlength="2" maxlength="80" placeholder="Escribe tu distrito o ciudad"></label>
           <label>Dirección completa<input name="address" type="text" autocomplete="street-address" minlength="8" maxlength="200" required></label>
           <label>Referencia (opcional)<input name="reference" type="text" maxlength="120" placeholder="Ej. frente al parque, casa verde"></label>
+          <fieldset class="payment-choice">
+            <legend>Método de pago</legend>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="contraentrega" checked>
+              <span><strong>Pago contra entrega</strong><small>Pagas cuando recibes tu pedido.</small></span>
+            </label>
+            <label class="payment-option payment-option-disabled">
+              <input type="radio" name="payment" value="tarjeta" disabled>
+              <span><strong>Tarjeta de crédito/débito</strong><small>Próximamente: estamos integrando una pasarela segura.</small></span>
+            </label>
+          </fieldset>
           <label class="check-label">
             <input type="checkbox" name="consent" required>
             <span>Acepto la <a href="legal.html#privacidad" target="_blank" rel="noopener">política de privacidad</a> y los <a href="legal.html#terminos" target="_blank" rel="noopener">términos</a>.</span>
           </label>
           <p class="form-note" data-order-status role="status"></p>
           <p class="demo-order-note" data-demo-order-note hidden>Modo demostración: este pedido no se registrará.</p>
-          <button class="btn btn-primary btn-full btn-cta" type="submit">Confirmar pedido contra entrega <span class="btn-icon"><svg class="icon"><use href="#i-check"/></svg></span></button>
-          <p class="checkout-note">No pagas nada ahora. Pagas al recibir tu pedido.</p>
+          <button class="btn btn-primary btn-full btn-cta" type="submit">Confirmar pedido <span class="btn-icon"><svg class="icon"><use href="#i-check"/></svg></span></button>
+          <p class="checkout-note">Contra entrega: pagas al recibir. Pago con tarjeta: próximamente.</p>
         </form>
 
         <aside class="checkout-summary order-summary">
@@ -879,7 +866,7 @@
       <small>Pago contra entrega</small>
     </div>
     <button class="btn btn-primary btn-cta sticky-buy-button" type="button" data-open-order>
-      <span class="sticky-cta-long">Comprar contra entrega</span>
+      <span class="sticky-cta-long">Comprar ahora</span>
       <span class="sticky-cta-short">Comprar</span>
       <span class="btn-icon"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
     </button>

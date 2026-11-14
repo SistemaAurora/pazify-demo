@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123C3F">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Gracias por tu pedido | Pazify</title>
+  <meta name="description" content="Gracias por tu pedido de Pazify. Te contactaremos para confirmar la entrega.">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="gracias.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="thanks-header">
+    <div class="container thanks-header-inner">
+      <a class="brand" href="index.html" aria-label="Volver a Pazify">
+        <span class="brand-mark" aria-hidden="true"><img src="assets/img/logo-icon.png" alt="" width="38" height="38"></span>
+        <span class="brand-word">PAZIFY</span>
+      </a>
+      <a class="back-link" href="index.html">← Volver a la tienda</a>
+    </div>
+  </header>
+
+  <main id="contenido" class="thanks-main">
+    <div class="container thanks-layout">
+      <section class="thanks-card">
+        <span class="thanks-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"/></svg>
+        </span>
+        <p class="eyebrow" data-thanks-eyebrow>PEDIDO RECIBIDO</p>
+        <h1>¡Gracias por tu pedido!</h1>
+        <p class="thanks-lead" data-thanks-lead>Recibimos tu pedido. Te contactaremos por WhatsApp para confirmar la entrega y coordinar el pago contra entrega.</p>
+
+        <div class="thanks-code">
+          <span>Tu código de pedido</span>
+          <strong data-order-code>PZ-—</strong>
+        </div>
+
+        <div class="thanks-summary">
+          <div><span>Producto</span><strong>Pazify 3 en 1</strong></div>
+          <div><span>Pack</span><strong data-order-pack>—</strong></div>
+          <div><span>Total</span><strong data-order-total>—</strong></div>
+          <div><span>Pago</span><strong data-order-payment>—</strong></div>
+        </div>
+
+        <div class="thanks-actions">
+          <a class="btn btn-primary" href="index.html">Volver a la tienda</a>
+          <a class="btn btn-outline" data-whatsapp-link href="https://wa.me/51972841004" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+        </div>
+
+        <div class="thanks-card-payment" data-card-payment hidden>
+          <h2>Pago con tarjeta</h2>
+          <p data-card-message>Estamos coordinando el enlace de pago seguro. También puedes escribirnos por WhatsApp para completarlo.</p>
+          <a class="btn btn-primary" data-card-link href="#" hidden>Pagar con tarjeta</a>
+        </div>
+
+        <p class="thanks-note" data-demo-note hidden>Vista previa: este pedido no se ha registrado en el servidor.</p>
+      </section>
+
+      <aside class="thanks-aside">
+        <img src="assets/img/pazify-product-main.webp" alt="Botella Pazify 3 en 1" width="800" height="800">
+        <h2>¿Qué sigue?</h2>
+        <ol>
+          <li><strong>Revisamos tu pedido.</strong> Te escribimos por WhatsApp para confirmar los datos.</li>
+          <li><strong>Preparamos tu Pazify.</strong> Coordinamos la entrega según tu zona.</li>
+          <li><strong>Pagas al recibir.</strong> Efectivo, Yape o Plin según disponibilidad.</li>
+        </ol>
+        <p class="thanks-help">¿Dudas? WhatsApp <a href="https://wa.me/51972841004" target="_blank" rel="noopener">+51 972 841 004</a></p>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="thanks-footer">
+    <div class="container">
+      <p>© 2026 Pazify. Cuidado y bienestar para mascotas.</p>
+      <a href="legal.html#privacidad">Privacidad</a>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code') || '—';
+      let order = {};
+      try {
+        order = JSON.parse(window.sessionStorage.getItem('pazify_last_order') || '{}');
+      } catch {
+        order = {};
+      }
+
+      const text = (selector, value) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value;
+      };
+
+      text('[data-order-code]', order.code || code);
+      text('[data-order-pack]', order.packLabel || '—');
+      text('[data-order-total]', order.total || '—');
+      text('[data-order-payment]', order.payment === 'tarjeta' ? 'Tarjeta / Zipago' : 'Contra entrega');
+
+      if (order.payment === 'tarjeta') {
+        const card = document.querySelector('[data-card-payment]');
+        if (card) card.hidden = false;
+        if (order.paymentUrl) {
+          const link = document.querySelector('[data-card-link]');
+          if (link) {
+            link.href = order.paymentUrl;
+            link.hidden = false;
+          }
+        }
+      }
+
+      if (order.status === 'demo') {
+        const note = document.querySelector('[data-demo-note]');
+        if (note) note.hidden = false;
+        text('[data-thanks-eyebrow]', 'VISTA PREVIA');
+        text('[data-thanks-lead]', 'Vista previa del pedido. Este sitio está en modo demostración y no ha registrado un pedido real.');
+      }
+
+      if (order.status === 'whatsapp') {
+        text('[data-thanks-eyebrow]', 'PEDIDO LISTO PARA ENVIAR');
+        text('[data-thanks-lead]', 'Tu pedido está listo para enviar por WhatsApp. Aún no se ha registrado en el sitio; envía el mensaje para confirmarlo.');
+      }
+
+      const wa = document.querySelector('[data-whatsapp-link]');
+      if (wa) {
+        const message = `Hola Pazify, tengo una consulta sobre mi pedido ${order.code || code}.`;
+        wa.href = `https://wa.me/51972841004?text=${encodeURIComponent(message)}`;
+      }
+    })();
+  </script>
+</body>
+</html>

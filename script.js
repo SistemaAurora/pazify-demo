@@ -20,7 +20,12 @@
       3: { units: 3, price: 199.9, compareAt: 299.9, perUnit: 66.63, label: "3 unidades", savings: 100 },
     },
     offerPopDelay: 12000,
-    orderEndpoint: "https://slim-constantly-strain-gpl.trycloudflare.com/order", // Temporal: túnel local. Para producción, usa el Worker de backend/.
+    zipagoLinks: {
+      1: "",
+      2: "",
+      3: "",
+    },
+    orderEndpoint: "https://pazify-orders.dramatic-macrame.workers.dev/order", // Worker gratuito temporal. Reclámalo en Cloudflare.
     orderEndpointTimeout: 15000,
     analytics: {
       gtmId: "",
@@ -75,6 +80,7 @@
     cityOtherInput: $('input[name="cityOther"]'),
     galleryMain: $("[data-gallery-main]"),
     galleryThumbs: $$("[data-gallery-thumbs] .thumb"),
+    galleryDots: $$("[data-gallery-dot]"),
     lightbox: $("#lightbox"),
     lightboxImage: $("[data-lightbox-image]"),
     lightboxCaption: $("[data-lightbox-caption]"),
@@ -364,7 +370,7 @@
   const buildOrderText = (data, orderCode, demo = false) => {
     const pack = CONFIG.packs[state.selectedPack];
     const lines = [
-      demo ? "PEDIDO DE DEMOSTRACIÓN — NO REGISTRADO" : "Hola Pazify 👋 Quiero confirmar este pedido contra entrega:",
+      demo ? "PEDIDO DE DEMOSTRACIÓN — NO REGISTRADO" : "Hola Pazify 👋 Quiero confirmar este pedido:",
       "",
       `Código de pedido: ${orderCode}`,
       `Producto: ${CONFIG.product.name}`,
@@ -375,7 +381,7 @@
       `Ahorro: ${money(pack.savings)}`,
       "",
       "Envío: Gratis a todo el Perú (sujeto a cobertura)",
-      "Método de pago: contra entrega",
+      `Método de pago: ${data.payment === "tarjeta" ? "tarjeta de crédito/débito (Zipago)" : "contra entrega"}`,
       "",
       `Nombre: ${data.name}`,
       `WhatsApp: ${data.phone}`,
@@ -387,17 +393,22 @@
     return lines.join("\n");
   };
 
-  const showOrderSuccess = ({ title, message, code, demo = false }) => {
-    const card = $(".modal-order", els.orderModal);
-    if (card) card.classList.add("is-success");
-    if (els.orderModal) els.orderModal.setAttribute("aria-labelledby", "order-success-title");
-    if (els.orderSuccessTitle) els.orderSuccessTitle.textContent = title;
-    if (els.orderSuccess) els.orderSuccess.hidden = false;
-    if (els.orderForm) els.orderForm.hidden = true;
-    if (els.orderStatus) els.orderStatus.textContent = "";
-    if (els.orderSuccessMessage) els.orderSuccessMessage.textContent = message;
-    if (els.orderCode) els.orderCode.textContent = code;
-    document.body.dataset.lastOrderDemo = demo ? "true" : "false";
+  const redirectToThankYou = ({ code, data, pack, status = "registered", paymentUrl = "" }) => {
+    const summary = {
+      code,
+      name: data.name,
+      packLabel: pack.label,
+      total: `${CONFIG.currency} ${pack.price.toFixed(2)}`,
+      payment: data.payment,
+      paymentUrl,
+      status,
+    };
+    try {
+      window.sessionStorage.setItem("pazify_last_order", JSON.stringify(summary));
+    } catch {
+      /* noop */
+    }
+    window.location.href = `gracias.html?code=${encodeURIComponent(code)}`;
   };
 
   const handleOrderSubmit = async (event) => {
@@ -427,6 +438,7 @@
         : String(formData.get("city") || "").trim(),
       address: String(formData.get("address") || "").trim(),
       reference: String(formData.get("reference") || "").trim(),
+      payment: String(formData.get("payment") || "contraentrega"),
     };
 
     const pack = CONFIG.packs[state.selectedPack];
@@ -439,36 +451,18 @@
     state.lastOrderText = buildOrderText(data, localCode, demo);
 
     if (demo) {
-      showOrderSuccess({
-        title: "Vista previa del pedido",
-        message: "Este pedido no se ha registrado. El sitio está en modo demostración; configura un endpoint de pedidos para activar la tienda real.",
-        code: localCode,
-        demo: true,
-      });
+      redirectToThankYou({ code: localCode, data, pack, status: "demo" });
       track("demo_order_preview", {
         currency: CONFIG.currency,
         value: pack.price,
         pack: pack.label,
         demo: true,
       });
-      showToast("Vista previa creada. No se ha registrado ningún pedido.");
       return;
     }
 
     if (!CONFIG.orderEndpoint && CONFIG.whatsapp) {
-      const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
-      const whatsappWindow = window.open(url, "_blank");
-      if (!whatsappWindow) {
-        if (els.orderStatus) els.orderStatus.textContent = "Permite las ventanas emergentes para abrir WhatsApp.";
-        return;
-      }
-      whatsappWindow.opener = null;
-      showOrderSuccess({
-        title: "Pedido listo para WhatsApp",
-        message: "Abrimos WhatsApp con tu pedido. Envía el mensaje para que podamos confirmar la entrega. Aún no está registrado en el sitio.",
-        code: localCode,
-        demo: false,
-      });
+      redirectToThankYou({ code: localCode, data, pack, status: "whatsapp" });
       track("whatsapp_order_started", {
         transaction_id: localCode,
         currency: CONFIG.currency,
@@ -497,6 +491,7 @@
           city: data.city,
           address: data.address,
           reference: data.reference,
+          payment: data.payment,
           pack: state.selectedPack,
           packLabel: pack.label,
           quantity: pack.units,
@@ -521,14 +516,9 @@
       state.lastOrderCode = serverCode;
       state.lastOrderText = buildOrderText(data, serverCode, false);
 
-      showOrderSuccess({
-        title: "Pedido registrado",
-        message: CONFIG.whatsapp
-          ? "Pedido registrado. Abrimos WhatsApp para confirmar la entrega y coordinar el pago contra entrega."
-          : "Pedido registrado. Nos pondremos en contacto para confirmar la entrega. Pagas al recibir.",
-        code: serverCode,
-        demo: false,
-      });
+      const paymentUrl = data.payment === "tarjeta"
+        ? (CONFIG.zipagoLinks?.[state.selectedPack] || "")
+        : "";
 
       track("order_created", {
         transaction_id: serverCode,
@@ -536,45 +526,16 @@
         value: pack.price,
         shipping: 0,
         status: "created",
+        payment_method: data.payment,
         items: [{ item_name: `${CONFIG.product.name} — ${pack.label}`, price: pack.price, quantity: 1 }],
       });
 
-      if (CONFIG.whatsapp) {
-        const url = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
-        const whatsappWindow = window.open(url, "_blank");
-        if (whatsappWindow) {
-          whatsappWindow.opener = null;
-          track("whatsapp_click", { location: "order", order_id: serverCode });
-        } else if (els.orderStatus) {
-          els.orderStatus.textContent = "Pedido registrado. Permite las ventanas emergentes para abrir WhatsApp.";
-        }
-      }
+      redirectToThankYou({ code: serverCode, data, pack, status: "registered", paymentUrl });
     } catch (error) {
-      if (CONFIG.whatsapp) {
-        const fallbackUrl = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(state.lastOrderText)}`;
-        const fallbackWindow = window.open(fallbackUrl, "_blank");
-        if (fallbackWindow) {
-          fallbackWindow.opener = null;
-          showOrderSuccess({
-            title: "Pedido enviado por WhatsApp",
-            message: "No se pudo registrar en el panel, pero abrimos WhatsApp con tu pedido. Envía el mensaje para que podamos confirmarlo.",
-            code: state.lastOrderCode,
-            demo: false,
-          });
-          track("whatsapp_order_started", {
-            transaction_id: state.lastOrderCode,
-            currency: CONFIG.currency,
-            value: pack.price,
-            pack: pack.label,
-            fallback: true,
-          });
-        } else if (els.orderStatus) {
-          els.orderStatus.textContent = "No pudimos registrar el pedido ni abrir WhatsApp. Permite las ventanas emergentes e intenta de nuevo.";
-        }
-      } else if (els.orderStatus) {
+      if (els.orderStatus) {
         els.orderStatus.textContent = "No pudimos registrar tu pedido. No se ha confirmado nada. Intenta de nuevo o escríbenos por WhatsApp.";
       }
-      showToast("No se pudo registrar en el panel. Usamos WhatsApp como respaldo.");
+      showToast("No se registró el pedido. Intenta de nuevo.");
     } finally {
       window.clearTimeout(timeoutId);
       state.submitting = false;
@@ -597,6 +558,12 @@
       const active = item === thumb;
       item.classList.toggle("is-active", active);
       item.setAttribute("aria-selected", String(active));
+    });
+    const activeIndex = els.galleryThumbs.indexOf(thumb);
+    els.galleryDots.forEach((dot, dotIndex) => {
+      const active = dotIndex === activeIndex;
+      dot.classList.toggle("is-active", active);
+      dot.setAttribute("aria-pressed", String(active));
     });
     if (trackEvent) track("gallery_view", { image: src });
   };
@@ -854,6 +821,14 @@
       });
       thumb.addEventListener("focus", () => pause());
       thumb.addEventListener("blur", () => resume());
+    });
+
+    els.galleryDots.forEach((dot, dotIndex) => {
+      dot.addEventListener("click", () => {
+        index = dotIndex;
+        setGalleryImage(els.galleryThumbs[dotIndex], true);
+        pause(12000);
+      });
     });
 
     els.galleryMain.addEventListener("mouseenter", () => pause());
