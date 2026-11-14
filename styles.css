@@ -6474,3 +6474,13 @@ body {
     justify-content: center;
   }
 }
+
+
+.payment-option-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.payment-option-disabled input {
+  cursor: not-allowed;
+}
