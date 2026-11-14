@@ -58,7 +58,6 @@
           <a class="btn btn-primary" data-card-link href="#" hidden>Pagar con tarjeta</a>
         </div>
 
-        <p class="thanks-note" data-demo-note hidden>Vista previa: este pedido no se ha registrado en el servidor.</p>
       </section>
 
       <aside class="thanks-aside">
@@ -112,13 +111,6 @@
             link.hidden = false;
           }
         }
-      }
-
-      if (order.status === 'demo') {
-        const note = document.querySelector('[data-demo-note]');
-        if (note) note.hidden = false;
-        text('[data-thanks-eyebrow]', 'VISTA PREVIA');
-        text('[data-thanks-lead]', 'Vista previa del pedido. Este sitio está en modo demostración y no ha registrado un pedido real.');
       }
 
       if (order.status === 'whatsapp') {

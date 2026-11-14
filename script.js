@@ -1,13 +1,12 @@
 /* =========================================================
    Pazify — compra contra entrega en Perú
-   Configura tu WhatsApp y desactiva el modo demo para vender.
+   Configura tu WhatsApp y el endpoint de pedidos.
    ========================================================= */
 
 (() => {
   "use strict";
 
   const CONFIG = {
-    demoMode: false,
     whatsapp: "51972841004", // +51 972 841 004
     currency: "PEN",
     product: {
@@ -37,7 +36,6 @@
   const LOCATIONS = window.PAZIFY_LOCATIONS || {};
   const OFFER_KEY = "pazify_offer_pop_seen";
   const CONSENT_KEY = "pazify_consent_v1";
-  const isDemo = () => CONFIG.demoMode || (!CONFIG.orderEndpoint && !CONFIG.whatsapp);
 
   const state = {
     selectedPack: 1,
@@ -45,7 +43,6 @@
     submitting: false,
     lastOrderText: "",
     lastOrderCode: "",
-    lastOrderDemo: true,
   };
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -67,8 +64,6 @@
     orderSuccessTitle: $("[data-order-success-title]"),
     orderSuccessMessage: $("[data-order-success-message]"),
     orderCode: $("[data-order-code]"),
-    demoBanner: $("[data-demo-banner]"),
-    demoOrderNote: $("[data-demo-order-note]"),
     orderPackLabel: $("[data-order-pack-label]"),
     orderPackPrice: $("[data-order-pack-price]"),
     orderPackCompare: $("[data-order-pack-compare]"),
@@ -351,26 +346,10 @@
     return valid;
   };
 
-  const getOrderCode = (demo = false) => {
+  const getOrderCode = () => {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
-    return `${demo ? "DEMO" : "PZ"}-${date}-${suffix}`;
-  };
-
-  const applyDemoState = () => {
-    const demo = isDemo();
-    document.querySelectorAll("[data-demo-only]").forEach((element) => {
-      element.hidden = !demo;
-    });
-    document.querySelectorAll("[data-production-only]").forEach((element) => {
-      element.hidden = demo;
-    });
-    if (els.demoBanner) els.demoBanner.hidden = !demo;
-    if (els.demoOrderNote) els.demoOrderNote.hidden = !demo;
-    if (els.orderSuccessTitle && !els.orderModal?.classList.contains("is-success")) {
-      els.orderSuccessTitle.textContent = demo ? "Vista previa del pedido" : "Pedido registrado";
-    }
-    document.body.dataset.demo = demo ? "true" : "false";
+    return `PZ-${date}-${suffix}`;
   };
 
   const resetOrderModal = () => {
@@ -385,7 +364,6 @@
       populateCities("");
     }
     if (els.orderStatus) els.orderStatus.textContent = "";
-    applyDemoState();
   };
 
   const openOrder = () => {
@@ -394,7 +372,6 @@
     if (els.orderSuccess && !els.orderSuccess.hidden) resetOrderModal();
     else if (els.orderSuccess) els.orderSuccess.hidden = true;
     if (els.orderForm) els.orderForm.hidden = false;
-    applyDemoState();
     syncPackUI();
     openDialog(els.orderModal);
     track("begin_checkout", {
@@ -404,10 +381,10 @@
     });
   };
 
-  const buildOrderText = (data, orderCode, demo = false) => {
+  const buildOrderText = (data, orderCode) => {
     const pack = CONFIG.packs[state.selectedPack];
     const lines = [
-      demo ? "PEDIDO DE DEMOSTRACIÓN — NO REGISTRADO" : "Hola Pazify 👋 Quiero confirmar este pedido:",
+      "Hola Pazify 👋 Quiero confirmar este pedido:",
       "",
       `Código de pedido: ${orderCode}`,
       `Producto: ${CONFIG.product.name}`,
@@ -484,24 +461,11 @@
     };
 
     const pack = CONFIG.packs[state.selectedPack];
-    const demo = isDemo();
-    const localCode = getOrderCode(demo);
+    const localCode = getOrderCode();
     const submitButton = els.orderForm.querySelector('button[type="submit"]');
 
     state.lastOrderCode = localCode;
-    state.lastOrderDemo = demo;
-    state.lastOrderText = buildOrderText(data, localCode, demo);
-
-    if (demo) {
-      redirectToThankYou({ code: localCode, data, pack, status: "demo" });
-      track("demo_order_preview", {
-        currency: CONFIG.currency,
-        value: pack.price,
-        pack: pack.label,
-        demo: true,
-      });
-      return;
-    }
+    state.lastOrderText = buildOrderText(data, localCode);
 
     if (!CONFIG.orderEndpoint && CONFIG.whatsapp) {
       redirectToThankYou({ code: localCode, data, pack, status: "whatsapp" });
@@ -556,7 +520,7 @@
 
       const serverCode = result.orderId || result.id || localCode;
       state.lastOrderCode = serverCode;
-      state.lastOrderText = buildOrderText(data, serverCode, false);
+      state.lastOrderText = buildOrderText(data, serverCode);
 
       const paymentUrl = data.payment === "tarjeta"
         ? (CONFIG.zipagoLinks?.[state.selectedPack] || "")
@@ -669,9 +633,9 @@
   const setupExternalLinks = () => {
     $$("[data-whatsapp-link]").forEach((link) => {
       link.addEventListener("click", (event) => {
-        if (!CONFIG.whatsapp || CONFIG.demoMode) {
+        if (!CONFIG.whatsapp) {
           event.preventDefault();
-          showToast("Configura tu número de WhatsApp en script.js para activar este botón.");
+          showToast("WhatsApp no está disponible en este momento. Intenta más tarde.");
           return;
         }
         link.href = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent("Hola Pazify, tengo una duda sobre la botella 3 en 1.")}`;
@@ -1046,7 +1010,6 @@
   const init = () => {
     syncPackUI();
     populateCities(els.departmentSelect?.value || "");
-    applyDemoState();
     setupExternalLinks();
     bindEvents();
     setupVideo();
@@ -1064,7 +1027,6 @@
     selectPack,
     openOrder,
     showToast,
-    applyDemoState,
   };
 
   if (document.readyState === "loading") {

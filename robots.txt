@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Cambia este dominio por el tuyo antes de publicar.
 Sitemap: https://pazify.shop/sitemap.xml
